@@ -11,6 +11,9 @@ DEVICE_PATH := device/xiaomi/mojito
 # Inherit from proprietary files
 include vendor/xiaomi/mojito/BoardConfigVendor.mk
 
+# Inherit from ReloadedOS configuration
+include vendor/reloaded/config/BoardConfigReloaded.mk
+
 # A/B
 AB_OTA_UPDATER := true
 BOARD_BUILD_SYSTEM_ROOT_IMAGE := false
@@ -93,8 +96,9 @@ BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE := default
 LOC_HIDL_VERSION := 4.0
 
 # HIDL
-DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := $(DEVICE_PATH)/configs/manifest/framework_compatibility_matrix.xml
-DEVICE_MANIFEST_FILE += hardware/qcom-caf/sm8150/media/conf_files/sm6150/c2_manifest_vendor.xml
+DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE += $(DEVICE_PATH)/configs/manifest/framework_compatibility_matrix.xml \
+     vendor/qcom/opensource/core-utils/vendor_framework_compatibility_matrix.xml
+DEVICE_MANIFEST_FILE += hardware/qcom/sm8150/media/conf_files/sm6150/c2_manifest_vendor.xml
 DEVICE_MATRIX_FILE := $(DEVICE_PATH)/configs/manifest/compatibility_matrix.xml
 DEVICE_MANIFEST_FILE := $(DEVICE_PATH)/configs/manifest/manifest.xml
 
@@ -117,12 +121,18 @@ BOARD_KERNEL_CMDLINE += swiotlb=1
 BOARD_KERNEL_CMDLINE += msm_rtb.filter=0x237
 BOARD_KERNEL_CMDLINE += kpti=off
 BOARD_KERNEL_CMDLINE += init.is_inline=1
-BOARD_MKBOOTIMG_ARGS += --dtb $(TARGET_PREBUILT_DTB)
 
-BOARD_PREBUILT_DTBIMAGE_DIR := $(TARGET_KERNEL_DIR)
-BOARD_PREBUILT_DTBOIMAGE := $(BOARD_PREBUILT_DTBIMAGE_DIR)/dtbo.img
+BOARD_KERNEL_SEPARATED_DTBO := true
+TARGET_KERNEL_CLANG_COMPILE := false
+TARGET_KERNEL_NEW_GCC_COMPILE := true
+TARGET_KERNEL_CROSS_COMPILE_PREFIX := aarch64-elf-
+TARGET_KERNEL_CROSS_COMPILE_PREFIX_ARM32 := arm-eabi-
+KERNEL_TOOLCHAIN := $(PWD)/prebuilts/gcc/linux-x86/aarch64/aarch64-elf/bin
+TARGET_KERNEL_LLVM_BINUTILS := true
+TARGET_KERNEL_USE_IAS := false
+TARGET_KERNEL_CONFIG := neternels_defconfig
+TARGET_KERNEL_SOURCE := kernel/xiaomi/mojito
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
-TARGET_PREBUILT_DTB := $(DEVICE_PATH)-kernel/dtb
 
 # Media
 TARGET_USES_ION := true
@@ -152,9 +162,6 @@ TARGET_COPY_OUT_PRODUCT := product
 TARGET_COPY_OUT_SYSTEM_EXT := system_ext
 TARGET_COPY_OUT_VENDOR := vendor
 
-# Platform
-TARGET_BOARD_PLATFORM := sm6150
-
 # Power
 TARGET_POWERHAL_BOOST_EXT := $(DEVICE_PATH)/power/boost-ext.cpp
 TARGET_TAP_TO_WAKE_NODE := "/sys/touchpanel/double_tap"
@@ -180,8 +187,6 @@ ENABLE_VENDOR_RIL_SERVICE := true
 VENDOR_SECURITY_PATCH := $(PLATFORM_SECURITY_PATCH)
 
 # Sepolicy
-TARGET_SEPOLICY_DIR := msmsteppe
-include device/qcom/sepolicy_vndr-legacy-um/SEPolicy.mk
 SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/private
 SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/public
 BOARD_VENDOR_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/vendor
